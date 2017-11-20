@@ -1,3 +1,7 @@
+# Created by Massimo Di Pierro
+# Entirely based on documentation from https://cryptography.io/
+# License BSD
+
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import hashes
@@ -5,6 +9,19 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.exceptions import InvalidSignature
+from cryptography.fernet import Fernet
+
+class HumanAES(object):
+    def __init__(self, key=None):
+        self.key = key        
+    def generate(self):
+        self.key = Fernet.generate_key()
+    def encrypt(self, value):
+        fernet = Fernet(self.key)
+        return fernet.encrypt(value)
+    def decrypt(self, value):
+        fernet = Fernet(self.key)
+        return fernet.decrypt(value)
 
 class HumanRSA(object):
     def __init__(self):
@@ -53,11 +70,16 @@ class HumanRSA(object):
             return False
             
 def example():
+    message = 'hello world'
+    h = HumanAES()
+    h.generate()
+    assert h.decrypt(h.encrypt(message)) == message
+
     h = HumanRSA()
     h.generate()
     print h.public_pem()
     print h.private_pem()
-    message = 'hello world'
+
     encrypted = h.encrypt(message)
     decrypted = h.decrypt(encrypted)
     assert decrypted == message
