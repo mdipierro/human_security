@@ -3,8 +3,7 @@
 
 ## Symmetric encryption
 ```
-from human_security import HumanAES, HumanRSA
-
+from human_security import HumanAES
 message = 'hello world'
 h = HumanAES()
 h.generate()
@@ -15,6 +14,8 @@ assert h.decrypt(h.encrypt(message)) == message
 
 ## Asymmetric encryption
 ```
+from human_security import HumanRSA
+
 h = HumanRSA()
 h.generate()
 # save keys
@@ -30,6 +31,7 @@ assert decrypted == message
 
 ## Signatures
 ```
+from human_security import HumanRSA
 h = HumanRSA()
 h.generate()
 signature = h.sign(message)
