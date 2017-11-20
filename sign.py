@@ -1,34 +1,64 @@
-#
-# Author: Massimo Di Pierro
-# License: MIT
-#
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.exceptions import InvalidSignature
 
-import rsa
-import json
-import base64
+class HumanRSA(object):
+    def __init__(self):
+        self.pad = padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA1()),
+            algorithm=hashes.SHA1(),
+            label=None
+            )
+    def generate(self):
+        self.private_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+            backend=default_backend())
+        self.public_key = self.private_key.public_key()
+    def private_pem(self):
+        return self.private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption())
+    def public_pem(self):
+        return self.public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo)
+    def load_private_pem(self, pem):
+        self.private_key = load_pem_private_key(pem, password=None, backend=default_backend())
+    def load_public_pem(self, pem):
+        self.public_key = load_pem_public_key(pem, password=None, backend=default_backend())
+    def encrypt(self, data):
+        return self.public_key.encrypt(data, self.pad)
+    def decrypt(self, data):
+        return self.private_key.decrypt(data, self.pad)
+    def sign(self, data):
+        return self.private_key.sign(
+            data,
+            padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH),
+            hashes.SHA256())
+    def verify(self, data, signature):
+        try:
+            self.public_key.verify(
+                signature,
+                data,
+                padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH),
+                hashes.SHA256())
+            return True
+        except InvalidSignature:
+            return False
+            
 
-def make_keys():
-    (pubkey, privkey) = rsa.newkeys(512)
-    return {'public_key': pubkey._save_pkcs1_pem(),
-            'private_key':privkey._save_pkcs1_pem()}
-
-def sign(data, private_key):
-    privkey = rsa.PrivateKey.load_pkcs1(private_key)
-    signature = base64.b64encode(rsa.sign(str(data), privkey, 'SHA-1'))    
-    return signature
-
-def verify(data, signature, public_key):
-    pubkey = rsa.PublicKey.load_pkcs1(public_key)
-    signature = base64.b64decode(signature)
-    return rsa.verify(data, signature, pubkey)
-
-def test():
-    keys = make_keys()
-    public_key = keys['public_key']
-    private_key = keys['private_key']
-    data = '1234567890'
-    signature = sign(data, private_key)
-    assert verify(data, signature, public_key)
-
-if __name__ == '__main__':
-    test()
+h = HumanRSA()
+h.generate()
+print h.public_pem()
+print h.private_pem()
+encrypted = h.encrypt('encrypt this message')
+decrypted = h.decrypt(encrypted)
+print 'decrypted', decrypted
+signature = h.sign('hello')
+assert h.verify('hello', signature)
