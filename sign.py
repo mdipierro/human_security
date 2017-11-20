@@ -52,13 +52,17 @@ class HumanRSA(object):
         except InvalidSignature:
             return False
             
+def example():
+    h = HumanRSA()
+    h.generate()
+    print h.public_pem()
+    print h.private_pem()
+    message = 'hello world'
+    encrypted = h.encrypt(message)
+    decrypted = h.decrypt(encrypted)
+    assert decrypted == message
+    signature = h.sign(message)
+    assert h.verify(message, signature)
 
-h = HumanRSA()
-h.generate()
-print h.public_pem()
-print h.private_pem()
-encrypted = h.encrypt('encrypt this message')
-decrypted = h.decrypt(encrypted)
-print 'decrypted', decrypted
-signature = h.sign('hello')
-assert h.verify('hello', signature)
+if __name__ == '__main__':
+    example()
