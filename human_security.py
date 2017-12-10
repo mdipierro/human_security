@@ -1,5 +1,6 @@
 # Created by Massimo Di Pierro
 # Entirely based on documentation from https://cryptography.io/
+# Hosted at https://github.com/mdipierro/human_security
 # License BSD
 
 from cryptography.hazmat.backends import default_backend
