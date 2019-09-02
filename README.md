@@ -1,6 +1,11 @@
 # Security for Humans
 
 It is a thin layer on top of the cryptography module. Exposes an easy to use interface to EAS and RSA.
+Available on Pypi:
+
+```
+python3 -m pip install human_security
+```
 
 ## Symmetric encryption
 
